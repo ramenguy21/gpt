@@ -1,24 +1,42 @@
-# Use an official Python runtime as a parent image
-FROM python:3.10
+FROM python:3.11.5-slim-bookworm
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV  \
+    PYTHONFAULTHANDLER=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONHASHSEED=random \
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    # Poetry's configuration:
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_CACHE_DIR='/var/cache/pypoetry' \
+    POETRY_HOME='/usr/local' \
+    POETRY_VERSION=1.8.0
+# ^^^
+# Make sure to update it!
+
+# System deps:
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+# Copy only requirements to cache them in docker layer
+WORKDIR /code
+COPY poetry.lock pyproject.toml /code/
+
+# Project initialization:
+RUN poetry install --no-interaction --no-ansi
+
+# Creating folders, and files for a project:
+COPY . /code
 
 # Set the working directory in the container
 WORKDIR /code
 
 # Copy the dependencies file to the working directory
-COPY poetry.lock pyproject.toml /code/
+COPY pyproject.toml /code/
 
 # Install tesseract
 RUN apt update && apt install -y tesseract-ocr && apt install -y libtesseract-dev
-
-# Install Poetry and dependencies
-RUN pip install poetry && poetry install --no-root --no-dev
-
-# Copy the current directory contents into the container at /code
-COPY . /code/
 
 # Expose both port 8080 for HTTP and port 443 for HTTPS
 EXPOSE 8080
