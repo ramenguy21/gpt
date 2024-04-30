@@ -17,7 +17,29 @@ ENV  \
 # Make sure to update it!
 
 # System deps:
-RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install --no-install-recommends -y \
+    bash \
+    brotli \
+    build-essential \
+    curl \
+    gettext \
+    git \
+    libpq-dev \
+    wait-for-it \
+    # Installing `tini` utility:
+    # https://github.com/krallin/tini
+    # Get architecture to download appropriate tini release:
+    # See https://github.com/wemake-services/wemake-django-template/issues/1725
+    && dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" \
+    # Installing `poetry` package manager:
+    # https://github.com/python-poetry/poetry
+    && curl -sSL 'https://install.python-poetry.org' | python - \
+    && poetry --version \
+    # Cleaning cache:
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
 
 # Copy only requirements to cache them in docker layer
 WORKDIR /code
