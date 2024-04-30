@@ -1,0 +1,14 @@
+{
+    "builds": [{
+        "src": "filegpt_backend/filegpt_backend/wsgi.py",
+        "use": "@vercel/python",
+        "config": { "maxLambdaSize": "4gb", "runtime": "python3.10" }
+    }],
+
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "filegpt_backend/filegpt_backend/wsgi.py"
+        }
+    ]
+}
